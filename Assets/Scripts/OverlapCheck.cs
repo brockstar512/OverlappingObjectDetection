@@ -1,13 +1,9 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class OverlapCheck : MonoBehaviour
 { 
     Vector2 _areaTopRightCornerAABB,_areaBottomLeftCornerAABB = Vector2.zero;
-    public LayerMask DetectionLayer;
+    public LayerMask detectionLayer;
 
 
     // Start is called before the first frame update
@@ -33,7 +29,7 @@ public class OverlapCheck : MonoBehaviour
 
     Collider2D GetMostOverlappedCol()
     {
-        Collider2D[] overlappingCols = Physics2D.OverlapAreaAll(_areaTopRightCornerAABB, _areaBottomLeftCornerAABB,DetectionLayer);
+        Collider2D[] overlappingCols = Physics2D.OverlapAreaAll(_areaTopRightCornerAABB, _areaBottomLeftCornerAABB,detectionLayer);
         if (overlappingCols.Length == 0)
             return null;
 
@@ -41,8 +37,6 @@ public class OverlapCheck : MonoBehaviour
         Debug.Log(col.gameObject.name);
         return col;
     }
-    
-
     
     Collider2D DetermineMostOverlap(Collider2D[] lib)
     {
