@@ -6,8 +6,8 @@ using UnityEngine;
 
 public class OverlapCheck : MonoBehaviour
 { 
-    Vector2 area_top_right_cornerAABB,area_bottom_left_cornerAABB = Vector2.zero;
-    
+    Vector2 _areaTopRightCornerAABB,_areaBottomLeftCornerAABB = Vector2.zero;
+    public LayerMask DetectionLayer;
 
 
     // Start is called before the first frame update
@@ -15,55 +15,60 @@ public class OverlapCheck : MonoBehaviour
     {
         SetOverlappingArea();
     }
-    
-    private void SetOverlappingArea()
+    void SetOverlappingArea()
     {
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         float centerX = sr.bounds.center.x; 
         float centerY = sr.bounds.center.y;
         float extendsX = sr.bounds.extents.x; 
         float extendsY = sr.bounds.extents.y;
-        area_top_right_cornerAABB = new Vector2(centerX+extendsX,centerY+extendsY);
-        area_bottom_left_cornerAABB = new Vector2(centerX-extendsX,centerY-extendsY);
+        _areaTopRightCornerAABB = new Vector2(centerX+extendsX,centerY+extendsY);
+        _areaBottomLeftCornerAABB = new Vector2(centerX-extendsX,centerY-extendsY);
     }
+    
     private void FixedUpdate()
     {
-        //OverlapAreaNonAlloc
-        //OverlapAreaAll
-        // int num_colliders = Physics2D.OverlapAreaNonAlloc(top_right_corner, bottom_left_corner, results);
-        Collider2D[] result = Physics2D.OverlapAreaAll(area_top_right_cornerAABB, area_bottom_left_cornerAABB);
-        //Debug.Log(num_Colliders); 
-        if (result.Length > 0)
-        {
-            DetectMostOverlap(result);
-        }
-
+        GetMostOverlappedCol();
     }
 
-
-    string DetectMostOverlap(Collider2D[] lib)
+    Collider2D GetMostOverlappedCol()
     {
-        string result = String.Empty;
-        // if (lib.Length == 1)
-        // {
-        //     return lib[0].gameObject.name;
-        // }
-        foreach(var i in lib)
+        Collider2D[] overlappingCols = Physics2D.OverlapAreaAll(_areaTopRightCornerAABB, _areaBottomLeftCornerAABB,DetectionLayer);
+        if (overlappingCols.Length == 0)
+            return null;
+
+        Collider2D col = DetermineMostOverlap(overlappingCols);
+        Debug.Log(col.gameObject.name);
+        return col;
+    }
+    
+
+    
+    Collider2D DetermineMostOverlap(Collider2D[] lib)
+    {
+        Collider2D result = lib[0];
+        float currentResult = 0;
+        foreach(var col in lib)
         {
-            result = GetOverlappingArea(i).ToString();
+            float currentArea = GetOverlappingArea(col);
+
+            if ( currentArea > currentResult)
+            {
+                currentResult = currentArea;
+                result = col;
+
+            }
         }
 
         return result;
     }
     
-
-    float GetOverlappingArea(Collider2D OverlappingObject)
+    float GetOverlappingArea(Collider2D overlappingObject)
     { 
-        (Vector2 overlapping_top_right_cornerAABB,Vector2 overlapping_bottom_left_cornerAABB) = GetAABBCorners(OverlappingObject);
+        (Vector2 overlappingTopRightCornerAABB,Vector2 overlappingBottomLeftCornerAABB) = GetAABBCorners(overlappingObject);
 
-        float xLength = Mathf.Min(area_top_right_cornerAABB.x,overlapping_top_right_cornerAABB.x)-Mathf.Max(area_bottom_left_cornerAABB.x,overlapping_bottom_left_cornerAABB.x);
-        float yLength = Mathf.Min(area_top_right_cornerAABB.y,overlapping_top_right_cornerAABB.y)-Mathf.Max(area_bottom_left_cornerAABB.y,overlapping_bottom_left_cornerAABB.y);
-
+        float xLength = Mathf.Min(_areaTopRightCornerAABB.x,overlappingTopRightCornerAABB.x)-Mathf.Max(_areaBottomLeftCornerAABB.x,overlappingTopRightCornerAABB.x);
+        float yLength = Mathf.Min(_areaTopRightCornerAABB.y,overlappingBottomLeftCornerAABB.y)-Mathf.Max(_areaBottomLeftCornerAABB.y,overlappingBottomLeftCornerAABB.y);
         return xLength * yLength;
     }
     
@@ -72,21 +77,21 @@ public class OverlapCheck : MonoBehaviour
 
         Bounds objectsBound = overlappingObject.bounds;
         
-        Vector2 top_right_corner = new Vector2(
+        Vector2 topRightCorner = new Vector2(
             objectsBound.center.x + objectsBound.extents.x,
             objectsBound.center.y + objectsBound.extents.y);
         
-        Vector2 bottom_left_corner = new Vector2(
+        Vector2 bottomLeftCorner = new Vector2(
             objectsBound.center.x - objectsBound.extents.x,
             objectsBound.center.y - objectsBound.extents.y);
         
-        return (top_right_corner, bottom_left_corner);
+        return (topRightCorner, bottomLeftCorner);
     }
     
     private void OnDrawGizmos()
     {
 
-        CustomDebug.DrawRectange(area_top_right_cornerAABB, area_bottom_left_cornerAABB); 
+        CustomDebug.DrawRectange(_areaTopRightCornerAABB, _areaBottomLeftCornerAABB); 
 
     }
     
