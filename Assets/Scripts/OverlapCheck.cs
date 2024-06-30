@@ -5,23 +5,15 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 public class OverlapCheck : MonoBehaviour
-{   
-    Vector2 top_right_cornerAABB,bottom_left_cornerAABB;
+{ 
+    Vector2 area_top_right_cornerAABB,area_bottom_left_cornerAABB = Vector2.zero;
+    
 
 
     // Start is called before the first frame update
     void Start()
     {
-
-        // Debug.Log($"sides to right {top_right_corner} sides bottom left {bottom_left_corner}");
-        // Debug.Log($" min  { sr.bounds.min} max {sr.bounds.max}");
-        // Debug.Log($"sprite x min  { sr.sprite.rect.xMin} sprite x max {sr.sprite.rect.xMax} sprite y min  { sr.sprite.rect.yMin} sprite y max {sr.sprite.rect.yMax}");
-        // top_right_corner = new Vector2(centerX+extendsX,centerY+extendsY);
-        // bottom_left_corner = new Vector2(centerX-extendsX,centerY-extendsY);
-        // Debug.Log($"Based off sprite {top_right_corner} and {bottom_left_corner}");
-        // (top_right_corner, bottom_left_corner) = GetAABBCorners(this.GetComponent<Collider2D>());
-        // Debug.Log($"Based off function {top_right_corner} and {bottom_left_corner}");
-        
+        SetOverlappingArea();
     }
     
     private void SetOverlappingArea()
@@ -31,33 +23,50 @@ public class OverlapCheck : MonoBehaviour
         float centerY = sr.bounds.center.y;
         float extendsX = sr.bounds.extents.x; 
         float extendsY = sr.bounds.extents.y;
-        top_right_corner = new Vector2(centerX+extendsX,centerY+extendsY);
-        bottom_left_corner = new Vector2(centerX-extendsX,centerY-extendsY);
+        area_top_right_cornerAABB = new Vector2(centerX+extendsX,centerY+extendsY);
+        area_bottom_left_cornerAABB = new Vector2(centerX-extendsX,centerY-extendsY);
     }
     private void FixedUpdate()
     {
         //OverlapAreaNonAlloc
         //OverlapAreaAll
         // int num_colliders = Physics2D.OverlapAreaNonAlloc(top_right_corner, bottom_left_corner, results);
-        Collider2D[] result = Physics2D.OverlapAreaAll(top_right_corner, bottom_left_corner);
+        Collider2D[] result = Physics2D.OverlapAreaAll(area_top_right_cornerAABB, area_bottom_left_cornerAABB);
         //Debug.Log(num_Colliders); 
+        if (result.Length > 0)
+        {
+            DetectMostOverlap(result);
+        }
 
     }
 
 
     string DetectMostOverlap(Collider2D[] lib)
     {
-        string currentResult = String.Empty;
-        float currentAreaMax = 0f;
-        if (lib.Length == 1)
+        string result = String.Empty;
+        // if (lib.Length == 1)
+        // {
+        //     return lib[0].gameObject.name;
+        // }
+        foreach(var i in lib)
         {
-            return lib[0].gameObject.name;
+            result = GetOverlappingArea(i).ToString();
         }
-        
 
-        return currentResult;
+        return result;
     }
+    
 
+    float GetOverlappingArea(Collider2D OverlappingObject)
+    { 
+        (Vector2 overlapping_top_right_cornerAABB,Vector2 overlapping_bottom_left_cornerAABB) = GetAABBCorners(OverlappingObject);
+
+        float xLength = Mathf.Min(area_top_right_cornerAABB.x,overlapping_top_right_cornerAABB.x)-Mathf.Max(area_bottom_left_cornerAABB.x,overlapping_bottom_left_cornerAABB.x);
+        float yLength = Mathf.Min(area_top_right_cornerAABB.y,overlapping_top_right_cornerAABB.y)-Mathf.Max(area_bottom_left_cornerAABB.y,overlapping_bottom_left_cornerAABB.y);
+
+        return xLength * yLength;
+    }
+    
     (Vector2, Vector2) GetAABBCorners(Collider2D overlappingObject)
     {   
 
@@ -74,44 +83,12 @@ public class OverlapCheck : MonoBehaviour
         return (top_right_corner, bottom_left_corner);
     }
     
-    
     private void OnDrawGizmos()
     {
 
-        CustomDebug.DrawRectange(top_right_corner, bottom_left_corner); 
+        CustomDebug.DrawRectange(area_top_right_cornerAABB, area_bottom_left_cornerAABB); 
 
     }
     
-    /*public Vector3 OverlapArea(BoxCollider a, BoxCollider b)
-    {
-        // get the bounds of both colliders
-        var boundsA = a.bounds;
-        var boundsB = b.bounds;
-
-        // first heck whether the two objects are even overlapping at all
-        if(!boundsA.Intersects(boundsB))
-        {
-            Vector3.zero;
-        }
-
-        // now that we know they at least overlap somehow we can calculate
-
-        // get the bounds of both colliders
-        var boundsA = a.bounds;
-        var boundsB = b.bounds;
-
-        // get min and max point of both
-        var minA = boundsA.min; //(basically the bottom-left-back corner point)
-        var maxA = boundsA.max; //(basically the top-right-front corner point)
-
-        var minB = boundsB.min;
-        var maxB = boundsB.max;
-
-        // we want the smaller of the max and the higher of the min points
-        var lowerMax = new Vector3.Min(maxA, maxB);
-        var higherMin = new Vector3.Max(minA, minB);
-
-        // the delta between those is now your overlapping area
-        return lowerMax - higherMin;
-    }*/
+    
 }
