@@ -18,6 +18,7 @@ public class OverlapCheck : MonoBehaviour
         float centerY = sr.bounds.center.y;
         float extendsX = sr.bounds.extents.x; 
         float extendsY = sr.bounds.extents.y;
+
         _areaTopRightCornerAABB = new Vector2(centerX+extendsX,centerY+extendsY);
         _areaBottomLeftCornerAABB = new Vector2(centerX-extendsX,centerY-extendsY);
     }
@@ -34,7 +35,6 @@ public class OverlapCheck : MonoBehaviour
             return null;
 
         Collider2D col = DetermineMostOverlap(overlappingCols);
-        Debug.Log(col.gameObject.name);
         return col;
     }
     
@@ -42,9 +42,14 @@ public class OverlapCheck : MonoBehaviour
     {
         Collider2D result = lib[0];
         float currentResult = 0;
+        //float colliderArea = ()*()
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+
         foreach(var col in lib)
         {
             float currentArea = GetOverlappingArea(col);
+            Percent(col.bounds,sr.bounds);
+            
 
             if ( currentArea > currentResult)
             {
@@ -63,7 +68,34 @@ public class OverlapCheck : MonoBehaviour
 
         float xLength = Mathf.Min(_areaTopRightCornerAABB.x,overlappingTopRightCornerAABB.x)-Mathf.Max(_areaBottomLeftCornerAABB.x,overlappingTopRightCornerAABB.x);
         float yLength = Mathf.Min(_areaTopRightCornerAABB.y,overlappingBottomLeftCornerAABB.y)-Mathf.Max(_areaBottomLeftCornerAABB.y,overlappingBottomLeftCornerAABB.y);
+        
+        
         return xLength * yLength;
+    }
+    
+    //get percentage that item overlaps
+    float Percent(Bounds a,Bounds b)
+    {
+        // get the bounds of both colliders
+        var boundsA = a;
+        var boundsB = b;
+
+        // get min and max point of both
+        var minA = boundsA.min; //(basically the bottom-left-back corner point)
+        var maxA = boundsA.max; //(basically the top-right-front corner point)
+
+        var minB = boundsB.min;
+        var maxB = boundsB.max;
+
+        // we want the smaller of the max and the higher of the min points
+        var lowerMax = Vector3.Min(maxA, maxB);
+        var higherMin = Vector3.Max(minA, minB);
+ 
+        // the delta between those is now your overlapping area
+        Vector2 overlappingSqaure = lowerMax - higherMin;
+        float overlappingArea = overlappingSqaure.x * overlappingSqaure.y;
+        
+        return overlappingArea/(a.extents.x * 2 * a.extents.y * 2)*100.0f;
     }
     
     (Vector2, Vector2) GetAABBCorners(Collider2D overlappingObject)
